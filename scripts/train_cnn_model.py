@@ -12,7 +12,8 @@ import time
 
 # --- File path config ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LABELS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "renders", "processed_dataset", "labels.json")
+LABELS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "processed_dataset", "labels.json")
+IMAGES_BASE_DIR = os.path.join(BASE_DIR, "..", "data", "processed_dataset", "images")
 MODEL_SAVE_PATH = os.path.join(BASE_DIR, "..", "models", "deeptrack2019_style_cnn.pth")
 LOGS_BASE_DIR = os.path.join(BASE_DIR, "..", "runs")
 
@@ -25,8 +26,6 @@ SPLIT_RATIO = 0.8 # Use 80% of data for training, 20% for validation
 
 # --- PyTorch Device Setup ---
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {DEVICE}")
-
 
 class ParticleDataset(Dataset):
     """Custom PyTorch Dataset for loading particle images and their coordinates."""
@@ -54,7 +53,7 @@ class ParticleDataset(Dataset):
         
         # --- Load Image ---
         # OpenCV loads images in BGR format, so we convert to RGB
-        image = cv2.imread(record['image_path'])
+        image = cv2.imread(os.path.join(IMAGES_BASE_DIR, record['image_filename']))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         # --- Load Target ---
@@ -126,22 +125,19 @@ def train_model():
     writer = SummaryWriter(log_dir)
     print(f"TensorBoard log directory: {log_dir}")
     
-    # --- 1. Load all data records from JSON ---
-    print(f"Loading all labels from {LABELS_JSON_PATH}...")
+    # --- Load data records from JSON ---
+    print(f"Loading labels from {LABELS_JSON_PATH}")
     with open(LABELS_JSON_PATH, 'r') as f:
         all_labels = json.load(f)
     print(f"Loaded {len(all_labels)} total data points.")
     
-    # --- 2. Split the data records ---
-    # Calculate split sizes
+    # --- Split the data records ---
     dataset_size = len(all_labels)
     train_size = int(SPLIT_RATIO * dataset_size)
     val_size = dataset_size - train_size
     print(f"Splitting data: {train_size} for training, {val_size} for validation.")
 
-    # Use a fixed generator for reproducible splits
     generator = torch.Generator().manual_seed(42)
-    # The random_split function gives us indices, not the data itself.
     train_indices, val_indices = random_split(range(dataset_size), [train_size, val_size], generator=generator)
 
     # Create datasets for each split using the indices
@@ -151,11 +147,11 @@ def train_model():
     train_dataset = ParticleDataset(train_labels)
     val_dataset = ParticleDataset(val_labels)
 
-    # --- 3. Create DataLoaders ---
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+    # --- Create DataLoaders ---
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
     
-    # --- 4. Setup Model, Loss, and Optimizer ---
+    # --- Setup Model, Loss, and Optimizer ---
     model = DeepTrackCNN().to(DEVICE)
     criterion = nn.MSELoss() 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
@@ -163,9 +159,9 @@ def train_model():
     best_val_loss = float('inf')
     
     print("\nStarting training...")
-    # --- 5. Main Training & Validation Loop ---
+    # --- Training & Validation Loop ---
     for epoch in range(EPOCHS):
-        # --- TRAINING PHASE ---
+        # --- TRAINING ---
         model.train() # Set the model to training mode
         train_loss = 0.0
         for images, targets in tqdm(train_loader, desc=f"Epoch {epoch+1}/{EPOCHS} [Training]"):
@@ -177,7 +173,7 @@ def train_model():
             optimizer.step()
             train_loss += loss.item()
             
-        # --- Validation ---
+        # --- VALIDATION ---
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
@@ -187,15 +183,15 @@ def train_model():
                 loss = criterion(predictions, targets)
                 val_loss += loss.item()
 
-        # --- Log train and validation losses ---
-        writer.add_scalar('Loss/train', avg_train_loss, epoch)
-        writer.add_scalar('Loss/validation', avg_val_loss, epoch)
-
         # --- Print Epoch Results ---
         avg_train_loss = train_loss / len(train_loader)
         avg_val_loss = val_loss / len(val_loader)
         print(f"Epoch {epoch+1}: Train Loss = {avg_train_loss:.6f}, Validation Loss = {avg_val_loss:.6f}")
         
+        # --- Log train and validation losses ---
+        writer.add_scalar('Loss/train', avg_train_loss, epoch)
+        writer.add_scalar('Loss/validation', avg_val_loss, epoch)
+
         # --- Save Best Model ---
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
@@ -206,4 +202,5 @@ def train_model():
 
 
 if __name__ == "__main__":
+    print(f"Using device: {DEVICE}")
     train_model()

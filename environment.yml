@@ -1,16 +1,17 @@
 name: dropletML
 
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
   - defaults
-  - pytorch
 
 dependencies:
-  - python=3.9
+  - python
   - opencv
   - numpy
   - tqdm
-  - pytorch
-  - torchvision
-  - cudatoolkit
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch-cuda
   - tensorboard
