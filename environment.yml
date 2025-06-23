@@ -1,0 +1,11 @@
+name: dropletML
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.9    # It's good practice to specify the Python version
+  - opencv        # This is the main package for OpenCV
+  - numpy         # Your script also uses numpy
+  - tqdm          # For the nice progress bar
