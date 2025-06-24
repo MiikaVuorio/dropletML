@@ -20,9 +20,10 @@ LOGS_BASE_DIR = os.path.join(BASE_DIR, "..", "runs")
 
 # --- Training Hyperparameters ---
 LEARNING_RATE = 1e-4
-BATCH_SIZE = 64
-EPOCHS = 20
+BATCH_SIZE = 128
+EPOCHS = 350
 SPLIT_RATIO = 0.8 # Use 80% of data for training, 20% for validation
+LOADER_NUM_WORKERS = 0
 
 # --- PyTorch Device Setup ---
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -148,8 +149,8 @@ def train_model():
     val_dataset = ParticleDataset(val_labels)
 
     # --- Create DataLoaders ---
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=LOADER_NUM_WORKERS, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=LOADER_NUM_WORKERS, pin_memory=True)
     
     # --- Setup Model, Loss, and Optimizer ---
     model = DeepTrackCNN().to(DEVICE)
@@ -164,7 +165,7 @@ def train_model():
         # --- TRAINING ---
         model.train() # Set the model to training mode
         train_loss = 0.0
-        for images, targets in tqdm(train_loader, desc=f"Epoch {epoch+1}/{EPOCHS} [Training]"):
+        for images, targets in tqdm(train_loader, desc=f"Epoch {epoch+1}/{EPOCHS} [Training]", leave=False):
             images, targets = images.to(DEVICE), targets.to(DEVICE)
             predictions = model(images)
             loss = criterion(predictions, targets)
@@ -177,7 +178,7 @@ def train_model():
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
-            for images, targets in tqdm(val_loader, desc=f"Epoch {epoch+1}/{EPOCHS} [Validation]"):
+            for images, targets in tqdm(val_loader, desc=f"Epoch {epoch+1}/{EPOCHS} [Validation]", leave=False):
                 images, targets = images.to(DEVICE), targets.to(DEVICE)
                 predictions = model(images)
                 loss = criterion(predictions, targets)
@@ -186,7 +187,8 @@ def train_model():
         # --- Print Epoch Results ---
         avg_train_loss = train_loss / len(train_loader)
         avg_val_loss = val_loss / len(val_loader)
-        print(f"Epoch {epoch+1}: Train Loss = {avg_train_loss:.6f}, Validation Loss = {avg_val_loss:.6f}")
+        tqdm.write(f"\rEpoch {epoch+1}/{EPOCHS}: Train Loss = {avg_train_loss:.6f}, Validation Loss = {avg_val_loss:.6f}")
+        # print(f"Epoch {epoch+1}: Train Loss = {avg_train_loss:.6f}, Validation Loss = {avg_val_loss:.6f}")
         
         # --- Log train and validation losses ---
         writer.add_scalar('Loss/train', avg_train_loss, epoch)
@@ -196,7 +198,7 @@ def train_model():
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             torch.save(model.state_dict(), MODEL_SAVE_PATH)
-            print(f"  -> New best model saved to {MODEL_SAVE_PATH} (Validation Loss: {best_val_loss:.6f})")
+            tqdm.write(f"\n  -> Best model saved to {MODEL_SAVE_PATH} (Validation Loss: {best_val_loss:.6f})")
 
     print("\nTraining finished.")
 

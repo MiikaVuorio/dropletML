@@ -7,11 +7,12 @@ channels:
   - defaults
 
 dependencies:
-  - python
+  - python=3.9
   - opencv
   - numpy
   - tqdm
+  - tensorboard
   - pytorch::pytorch
   - pytorch::torchvision
-  - pytorch-cuda
-  - tensorboard
+  - pytorch::torchaudio
+  - pytorch::pytorch-cuda=12.4
