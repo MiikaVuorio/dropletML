@@ -46,8 +46,8 @@ def draw_bounding_boxes():
         center_xy = record['center_xy']
         bbox_wh = record['bbox_wh']
         
-        center_x, center_y = center_xy[0], center_xy[1]
-        width, height = bbox_wh[0], bbox_wh[1]
+        center_x, center_y = center_xy[0], (1280 - center_xy[1])
+        width, height = bbox_wh[0]*2, bbox_wh[1]*2
         
         # --- Convert from (center, width, height) to (top-left, bottom-right) ---
         top_left_x = int(center_x - width / 2)

@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 # --- Input image locations ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-RENDER_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "images", "droplet_pos_test.png")
-DROPLET_POS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "labels.json")
+RENDER_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "just_positions", "images", "droplet_pos_test.png")
+DROPLET_POS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "just_positions", "labels.json")
 
 # --- Output locations ---
 OUTPUT_DIR = os.path.join(BASE_DIR, "..", "data", "processed_dataset")
@@ -21,6 +21,10 @@ X_OFFSET = 180
 Y_OFFSET = 460
 DX_RANGE = range(0, 361, 5)
 DY_RANGE = range(0, 361, 5)
+DRAW_POINTS = False
+CENTER_COLOR = (0, 0, 255)
+CENTER_RADIUS = 2
+THICKNESS = -1
 
 def process_data():
     """
@@ -37,6 +41,7 @@ def process_data():
     with open(DROPLET_POS_JSON_PATH, 'r') as f:
         data = json.load(f)
     all_droplet_positions = np.array(data['droplet_pos_test.png']['droplet_positions'])
+    all_droplet_positions[:, 1] = 1280 - all_droplet_positions[:, 1]
     
     # --- Output setup ---
     output_images_dir = os.path.join(OUTPUT_DIR, "images")
@@ -75,7 +80,10 @@ def process_data():
             # --- Calculate the droplet's position RELATIVE to the crop ---
             relative_x = closest_droplet_abs[0] - x_start
             relative_y = closest_droplet_abs[1] - y_start
-            
+
+            if (DRAW_POINTS):
+                cv2.circle(cropped_image, (int(relative_x), int(relative_y)), CENTER_RADIUS, CENTER_COLOR, thickness=-1)
+                        
             # --- Save the cropped image and its label ---
             output_filename = f"{IMAGE_BASE_NAME}_{dx}_{dy}.png"
             output_path = os.path.join(output_images_dir, output_filename)

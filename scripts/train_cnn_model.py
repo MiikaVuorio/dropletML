@@ -21,7 +21,7 @@ LOGS_BASE_DIR = os.path.join(BASE_DIR, "..", "runs")
 # --- Training Hyperparameters ---
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 128
-EPOCHS = 350
+EPOCHS = 1500
 SPLIT_RATIO = 0.8 # Use 80% of data for training, 20% for validation
 LOADER_NUM_WORKERS = 0
 
