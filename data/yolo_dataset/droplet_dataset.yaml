@@ -1,0 +1,6 @@
+path: C:\Users\miika\Pictures\DropletML\data\yolo_dataset
+train: images/train
+val: images/val
+nc: 1
+names:
+- droplet
