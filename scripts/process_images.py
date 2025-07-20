@@ -11,7 +11,7 @@ RENDER_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "just_positions", "ima
 DROPLET_POS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "just_positions", "labels.json")
 
 # --- Output locations ---
-OUTPUT_DIR = os.path.join(BASE_DIR, "..", "data", "processed_dataset")
+OUTPUT_DIR = os.path.join(BASE_DIR, "..", "data", "processed_dataset_seed_1")
 IMAGE_BASE_NAME = "droplet_crop"
 
 # --- Cropping Logic ---
