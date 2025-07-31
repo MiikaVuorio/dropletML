@@ -43,51 +43,7 @@ class HeatmapResNet(nn.Module):
 
         return output_grid
 
-# --- How to use the new model ---
 IN_CHANNELS = 60
 GRID_SIZE = 16
 
-# Instantiate our custom model
 model = HeatmapResNet(in_channels=IN_CHANNELS, grid_size=GRID_SIZE)
-
-# You can print it to see its structure
-# print(model)
-
-# Test it with a dummy input
-dummy_input = torch.randn(4, IN_CHANNELS, 640, 640) # batch_size=4
-output = model(dummy_input)
-
-print("Successfully processed the input!")
-print("Final output shape:", output.shape) # Should be torch.Size([4, 16, 16])
-
-
-# # Load the pre-trained ResNet-18 model
-# resnet = models.resnet18(pretrained=True)
-
-# # Define your desired number of input channels
-# IN_CHANNELS = 60 
-
-
-# new_conv1 = nn.Conv2d(
-#     in_channels=IN_CHANNELS,
-#     out_channels=resnet.conv1.out_channels,
-#     kernel_size=resnet.conv1.kernel_size,
-#     stride=resnet.conv1.stride,
-#     padding=resnet.conv1.padding,
-#     bias=False
-# )
-
-# with torch.no_grad():
-#     original_weights = resnet.conv1.weight.clone()
-#     avg_weights = torch.mean(original_weights, dim=1, keepdim=True) # Shape: [64, 1, 7, 7]
-
-#     new_conv1.weight = nn.Parameter(avg_weights.repeat(1, IN_CHANNELS, 1, 1)) # Shape: [64, 60, 7, 7]
-
-# resnet.conv1 = new_conv1
-
-# new_regressor_head = nn.Linear(
-#     in_features=512,
-#     out_features=16*16
-# )
-
-# resnet.regressor_head = new_regressor_head
