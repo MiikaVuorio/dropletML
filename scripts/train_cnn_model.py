@@ -69,7 +69,7 @@ class ParticleDataset(Dataset):
         
         return image, target
 
-# --- CNN nn module ---
+# --- CNN module ---
 class DeepTrackCNN(nn.Module):
     """
     CNN architecture inspired by the DeepTrack paper (Fig. 1a).
@@ -205,4 +205,8 @@ def train_model():
 
 if __name__ == "__main__":
     print(f"Using device: {DEVICE}")
-    train_model()
+
+    model = DeepTrackCNN()
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"The model has {total_params:,} trainable parameters.")
+    # train_model()

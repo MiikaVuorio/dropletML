@@ -8,7 +8,6 @@ import os
 # =========================================================================
 
 # --- Input File Paths ---
-# Assumes this script is in a 'scripts' folder and the CSVs are in the parent directory (project root)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TRAIN_LOSS_CSV_PATH = os.path.join(BASE_DIR, "..", "runs", "deeptrack_run_csv", "train_loss.csv")
 VAL_LOSS_CSV_PATH = os.path.join(BASE_DIR, "..", "runs", "deeptrack_run_csv", "validation_loss.csv")
@@ -31,7 +30,6 @@ def create_loss_plot():
     print("Loading data...")
     try:
         # The CSVs have three columns: 'Wall time', 'Step', and 'Value'.
-        # We only need the 'Step' (our epoch) and 'Value' (our loss).
         train_df = pd.read_csv(TRAIN_LOSS_CSV_PATH)
         val_df = pd.read_csv(VAL_LOSS_CSV_PATH)
     except FileNotFoundError as e:
