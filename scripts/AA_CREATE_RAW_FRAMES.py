@@ -37,22 +37,15 @@ def extract_frames(video_path, output_dir, prefix='frame_', target_height=1280):
     print(f"Original resolution: {original_width}x{original_height}")
     print(f"Resizing frames to:   {target_width}x{target_height}")
 
-    # --- 3. Main Extraction Loop ---
     frame_count = 0
     while True:
-        # Read one frame from the video
         ret, frame = cap.read()
 
-        # If 'ret' is False, it means we've reached the end of the video
         if not ret:
             break
 
-        # --- 4. Resize the frame ---
-        # INTER_AREA is generally recommended for shrinking images (downscaling)
         resized_frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_AREA)
 
-        # --- 5. Save the frame as a PNG image ---
-        # Using zero-padding (e.g., 00001, 00002) ensures correct alphabetical sorting
         filename = f"{prefix}{frame_count:05d}.png"
         save_path = os.path.join(output_dir, filename)
         cv2.imwrite(save_path, resized_frame)
@@ -71,8 +64,8 @@ def extract_frames(video_path, output_dir, prefix='frame_', target_height=1280):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract and resize all frames from a video for YOLO processing.")
     
-    parser.add_argument("--video_path", type=str, required=True, help="Path to the input MP4 video file.")
-    parser.add_argument("--output_dir", type=str, required=True, help="Directory to save the extracted 720p frames.")
+    parser.add_argument("--video-path", type=str, required=True, help="Path to the input MP4 video file.")
+    parser.add_argument("--output-dir", type=str, required=True, help="Directory to save the extracted 720p frames.")
     parser.add_argument("--prefix", type=str, default="frame_", help="The common prefix for your output frame files (e.g., 'my_video_').")
     
     args = parser.parse_args()
