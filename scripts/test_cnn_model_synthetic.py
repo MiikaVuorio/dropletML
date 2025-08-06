@@ -10,9 +10,8 @@ from tqdm import tqdm
 
 # --- Paths ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LABELS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "processed_dataset_seed_1", "labels.json")
+LABELS_JSON_PATH = os.path.join(BASE_DIR, "..", "data", "inputs", "processed_dataset_seed_1", "labels.json")
 IMAGES_BASE_DIR = os.path.join(BASE_DIR, "..", "data", "processed_dataset_seed_1", "images")
-# IMPORTANT: Point this to the model file saved by your training script
 MODEL_PATH = os.path.join(BASE_DIR, "..", "models", "deeptrack2019_style_cnn.pth")
 OUTPUT_DIR = os.path.join(BASE_DIR, "..", "data", "inference_results")
 
@@ -133,12 +132,14 @@ def evaluate_model():
     # --- 4. Print Final Results ---
     avg_pixel_distance = np.mean(all_pixel_distances)
     std_pixel_distance = np.std(all_pixel_distances)
+    max_error = np.max(all_pixel_distances)
     
     print("\n" + "="*40)
     print("Model Evaluation Complete")
     print("="*40)
     print(f"Average Pixel Distance Error: {avg_pixel_distance:.4f} pixels")
     print(f"Standard Deviation of Error: {std_pixel_distance:.4f} pixels")
+    print(f"Maximum Error (Distance):   {max_error:.2f} pixels")
     print(f"Saved {visualized_count} visualization images to: {OUTPUT_DIR}")
     print("="*40)
 
