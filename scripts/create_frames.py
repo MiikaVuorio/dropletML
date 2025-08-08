@@ -1,6 +1,7 @@
 import cv2
 import os
 import argparse
+import time
 
 def extract_frames(video_path, output_dir, prefix='frame_', target_height=1280):
     """
@@ -12,7 +13,7 @@ def extract_frames(video_path, output_dir, prefix='frame_', target_height=1280):
         prefix (str): The prefix to use for saved frame filenames.
         target_height (int): The target height for the output frames (width is scaled automatically).
     """
-
+    timer_start = time.time()
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video file at '{video_path}'")
@@ -38,6 +39,7 @@ def extract_frames(video_path, output_dir, prefix='frame_', target_height=1280):
     print(f"Resizing frames to:   {target_width}x{target_height}")
 
     frame_count = 0
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     while True:
         ret, frame = cap.read()
 
@@ -54,18 +56,25 @@ def extract_frames(video_path, output_dir, prefix='frame_', target_height=1280):
 
         # Provide progress feedback every 100 frames so you know it's working
         if frame_count % 100 == 0:
-            print(f"  ... Processed {frame_count} frames ...")
+            print(f"  ... Processed {frame_count} / {total_frames} frames ...")
 
-    # --- 6. Cleanup ---
+    # --- Cleanup ---
     cap.release()
     print(f"\nExtraction complete. A total of {frame_count} frames were saved.")
+
+    timer_end = time.time()
+    elapsed = timer_end - timer_start
+    hours, rem = divmod(elapsed, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    print(f"\nExecution time: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract and resize all frames from a video for YOLO processing.")
     
-    parser.add_argument("--video-path", type=str, required=True, help="Path to the input MP4 video file.")
-    parser.add_argument("--output-dir", type=str, required=True, help="Directory to save the extracted 720p frames.")
+    parser.add_argument("--video_path", type=str, required=True, help="Path to the input MP4 video file.")
+    parser.add_argument("--output_dir", type=str, required=True, help="Directory to save the extracted 720p frames.")
     parser.add_argument("--prefix", type=str, default="frame_", help="The common prefix for your output frame files (e.g., 'my_video_').")
     
     args = parser.parse_args()

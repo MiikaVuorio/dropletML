@@ -1,30 +1,48 @@
 # dropletML
 ML networks for macroscopic water droplet analysis
 
-Will develop this readme properly later, now here is just a long command for myself, because I'll probably need to use it later
+
+Steps of running CAH heatmap generator
+
+1. Convert 4k video into frames using create_frames.py, e.g.
+
+python create_frames.py ^
+    --video_path "../data/raw/raw_real_video/RS13_C0174.mp4" ^
+    --output_dir "../data/raw/rs13_frames" ^
+    --prefix "rs13_frame_"
+
+00:04:54 for 5316 frames of rs11
+00:05:23 for 5376 frames of rs13
+
+2. Run yolo object detection model on the frames
 
 python detect.py ^
     --weights ../DropletML/runs/yolov5_runs/train/droplet_detection_run/weights/best.pt ^
-    --source ../DropletML/data/raw/seed1_pos ^
-    --name real_frames_out ^
+    --source ../DropletML/data/raw/rs13_frames ^
+    --name rs13_frames ^
     --imgsz 640 ^
+    --conf 0.5 ^
     --hide-labels ^
     --line-thickness 1 ^
     --save-txt
 
---conf 0.6 ^
+~00:11:30 for rs11 frames
+~00:22:40 for rs13 frames
+3. Use create_heatmap_input.py to create the npz files for the resnet model
 
-Use of create_heatmap_input
-
-python AA_CREATE_HEATMAP_INPUT.py ^
-  --video_path "../data/raw/raw_real_video/RS12_C0177.MP4" ^
-  --labels_dir "../runs/yolov5_runs/detect/real_frames_out/" ^
+python create_heatmap_input.py ^
+  --video_path "../data/raw/raw_real_video/RS13_C0174.MP4" ^
+  --labels_dir "../runs/yolov5_runs/detect/rs13_labels_conf_05/" ^
   --output_dir "../data/inputs/heatmap_resnet_samples/" ^
-  --label_prefix "frame_" ^
-  --start_second 36 ^
-  --end_second 46 ^
+  --output_prefix "rs13_sample_" ^
+  --label_prefix "rs13_frame_" ^
+  --start_second 30 ^
+  --end_second 110 ^
   --stride 20 ^
-  --label_value 0.415
+  --label_value 0.19
+
+rs12 elapsed 00:22:48
+rs11 elapsed 00:17:22
 
 python evaluate_yolo_distance.py ^
   --labels_dir "../runs/yolov5_runs/detect/seed1_out/labels" ^
@@ -32,6 +50,6 @@ python evaluate_yolo_distance.py ^
   --image_width 720 ^
   --image_height 1280
   
-White plastic — acrylonitrile butadiene styrene, ABS — 23.8 deg = 0.415 rad
-Transparent plastic — polyethylene terephthalate, PET — 28.5 deg = 0.497 rad
-silicon wafer 0.2 — 10.9 deg = 0.190 rad 
+RS11 — White plastic — acrylonitrile butadiene styrene, ABS — 23.8 deg = 0.415 rad
+RS12 — Transparent plastic — polyethylene terephthalate, PET — 28.5 deg = 0.497 rad
+RS13 — silicon wafer 0.2 — 10.9 deg = 0.190 rad `

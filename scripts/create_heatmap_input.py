@@ -2,8 +2,10 @@ import cv2
 import numpy as np
 import os
 import argparse
+from math import floor
+import time
 
-def create_atomic_samples(video_path, labels_dir, label_prefix, output_dir, start_second, end_second, num_frames, crop_size, stride, label_value, grid_size):
+def create_atomic_samples(video_path, labels_dir, label_prefix, output_dir, output_prefix, start_second, end_second, num_frames, crop_size, stride, label_value, grid_size):
     """
     Processes a video to generate atomic .npz samples, each containing a sequence
     of images, masks, and a corresponding label grid.
@@ -11,15 +13,18 @@ def create_atomic_samples(video_path, labels_dir, label_prefix, output_dir, star
     Args:
         video_path (str): Path to the input MP4 video.
         labels_dir (str): Path to the directory containing YOLO .txt label files.
-        label_prefix (str): The prefix for label files (e.g., 'video_frame_').
+        label_prefix (str): The prefix for label files.
         output_dir (str): The base directory to save processed images and masks.
+        output_prefix (str): The prefix of the output npz files.
         start_second (int): The second in the video to start processing from.
         num_frames (int): The number of consecutive frames to process.
         crop_size (int): The edge length of the square central crop.
         label_value (float): The single floating-point value for the entire label grid.
         grid_size (int): The edge dimension of the square label grid (e.g., 16 for 16x16).
     """
-    # --- 1. Setup and Validation ---
+
+    timer_start = time.time()
+    # --- Setup and Validation ---
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video file at {video_path}")
@@ -38,10 +43,11 @@ def create_atomic_samples(video_path, labels_dir, label_prefix, output_dir, star
     label_grid = np.full((grid_size, grid_size), label_value, dtype=np.float32)
     print(f"Generated a {grid_size}x{grid_size} label grid with the constant value {label_value}.")
 
-    # --- 2. Main Generation Loop ---
+    # --- Main Generation Loop ---
     sample_count = 0
+    total_samples = floor((last_frame - first_frame) / stride)
     for start_frame in range(first_frame, last_frame - num_frames + 1, stride):
-        print(f"\n--- Generating Sample {sample_count} (starting at frame {start_frame}) ---")
+        print(f"\n--- Generating Sample {sample_count} / {total_samples} (starting at frame {start_frame}) ---")
         
         image_sequence = []
         mask_sequence = []
@@ -84,13 +90,20 @@ def create_atomic_samples(video_path, labels_dir, label_prefix, output_dir, star
             images_np = np.stack(image_sequence, axis=0)
             masks_np = np.stack(mask_sequence, axis=0)
             
-            output_path = os.path.join(output_dir, f"sample_{sample_count:04d}.npz")
+            output_path = os.path.join(output_dir, f"{output_prefix}{sample_count:04d}.npz")
             np.savez_compressed(output_path, images=images_np, masks=masks_np, label=label_grid)
             print(f"  > Saved sample to {output_path}")
             sample_count += 1
 
     cap.release()
     print(f"\nProcessing complete. Generated {sample_count} samples.")
+
+    timer_end = time.time()
+    elapsed = timer_end - timer_start
+    hours, rem = divmod(elapsed, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    print(f"\nExecution time: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}")
 
 
 if __name__ == "__main__":
@@ -99,6 +112,7 @@ if __name__ == "__main__":
     parser.add_argument("--video_path", type=str, required=True, help="Path to the input MP4 video file.")
     parser.add_argument("--labels_dir", type=str, required=True, help="Directory containing the YOLO .txt label files.")
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save the final .npz sample files.")
+    parser.add_argument("--output_prefix", type=str, required=True, help="The prefix of the output npz files.")
     parser.add_argument("--start_second", type=int, default=0, help="The second in the video to start processing from.")
     parser.add_argument("--end_second", type=int, default=10, help="The second in the video to end processing at.")
     parser.add_argument("--label_prefix", type=str, default="frame_", help="The common prefix for your label files.")
