@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from scipy import ndimage
 
 def create_and_overlay_heatmap(grid_data, original_image, alpha=0.6, colormap=cv2.COLORMAP_JET, interpolation=cv2.INTER_LINEAR):
     """
@@ -53,7 +54,8 @@ if __name__ == '__main__':
     # --- Create Dummy Data ---
     # 1. A dummy model output grid (16x16)
     grid_size = 16
-    dummy_grid = np.random.rand(grid_size, grid_size)
+    dummy_grid = np.random.normal(0,1,(grid_size, grid_size))
+    smooth_grid = ndimage.gaussian_filter(dummy_grid, sigma=5)
     print(f"Created a dummy {grid_size}x{grid_size} grid of random values.")
 
     # 2. A dummy original image (e.g., 640x640)
@@ -63,7 +65,7 @@ if __name__ == '__main__':
     
     # --- Use the Function ---
     # Create a smooth, JET-colored heatmap
-    smooth_blended_image = create_and_overlay_heatmap(dummy_grid, real_image, alpha=0.2, colormap=cv2.COLORMAP_JET, interpolation=cv2.INTER_LINEAR)
+    smooth_blended_image = create_and_overlay_heatmap(smooth_grid, real_image, alpha=0.2, colormap=cv2.COLORMAP_JET, interpolation=cv2.INTER_LINEAR)
     
     # --- Display the Results ---
     # Concatenate images for easy comparison

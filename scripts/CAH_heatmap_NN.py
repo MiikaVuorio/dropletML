@@ -78,10 +78,16 @@ class WettingDataset(Dataset):
 # --- The Main Training and Validation Functions ---
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs):
     print("\n--- Starting Training ---")
+
+    train_loss_history = []
+    val_loss_history = []
+
     for epoch in range(epochs):
         # --- Training Phase ---
         model.train() # Set model to training mode
+        total_train_loss = 0.0
         running_loss = 0.0
+        
         for i, (inputs, labels) in enumerate(train_loader):
             inputs, labels = inputs.to(device), labels.to(device)
             
@@ -97,14 +103,18 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
             optimizer.step()
             
             running_loss += loss.item()
+            total_train_loss += loss.item()
             if (i + 1) % 10 == 0: # Print progress every 10 batches
                 print(f"  Epoch [{epoch+1}/{epochs}], Batch [{i+1}/{len(train_loader)}], Loss: {running_loss / 10:.4f}")
                 running_loss = 0.0
 
+        avg_train_loss = total_train_loss / len(train_loader)
+        train_loss_history.append(avg_train_loss)
+
         # --- Validation Phase ---
         model.eval() # Set model to evaluation mode
         val_loss = 0.0
-        with torch.no_grad(): # No need to calculate gradients for validation
+        with torch.no_grad():
             for inputs, labels in val_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
@@ -112,11 +122,14 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
                 val_loss += loss.item()
         
         avg_val_loss = val_loss / len(val_loader)
+        val_loss_history.append(avg_val_loss)
         print(f"\n--- Epoch {epoch+1} Summary ---")
+        print(f"Training Loss: {avg_train_loss:.4f}")
         print(f"Validation Loss: {avg_val_loss:.4f}")
         print("--------------------------\n")
 
     print("--- Training Finished ---")
+    return train_loss_history, val_loss_history
 
 
 if __name__ == "__main__":
@@ -134,8 +147,11 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    # Your data should have 25 frames * (1 image + 1 mask) = 50 channels
+    # The default data has 25 frames * (1 image + 1 mask) = 50 channels
     model = HeatmapResNet(in_channels=50, grid_size=16).to(device)
+
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"The model has {total_params:,} trainable parameters.")
     
     # Load and split the dataset
     full_dataset = WettingDataset(args.data_dir)
@@ -153,9 +169,16 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     # --- Run the Training ---
-    train_model(model, train_loader, val_loader, criterion, optimizer, device, args.epochs)
+    train_history, val_history = train_model(model, train_loader, val_loader, criterion, optimizer, device, args.epochs)
 
     # --- Save the Trained Model ---
     model_save_path = "heatmap_resnet_final.pth"
     torch.save(model.state_dict(), model_save_path)
     print(f"Model saved to {model_save_path}")
+
+    print("\n--- Final Loss History ---")
+    print("Training Loss per Epoch:")
+    print(train_history)
+    print("\nValidation Loss per Epoch:")
+    print(val_history)
+    print("--------------------------")
