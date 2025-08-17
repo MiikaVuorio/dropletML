@@ -39,23 +39,18 @@ def create_loss_plot():
 
     print("Creating plot...")
     
-    # Use seaborn for a professional plot style.
     sns.set_theme(style="whitegrid")
     
-    # Create a figure and axes object. This gives us more control.
     fig, ax = plt.subplots(figsize=(12, 7))
     
-    # Plot the training and validation loss on the same axes
     ax.plot(train_df['Step'], train_df['Value'], label='Training Loss', color='blue', linewidth=2)
     ax.plot(val_df['Step'], val_df['Value'], label='Validation Loss', color='orange', linewidth=2)
     
-    # --- Add professional labels, title, etc. ---
     ax.set_title(PLOT_TITLE, fontsize=16, weight='bold')
     ax.set_xlabel(X_AXIS_LABEL, fontsize=12)
     ax.set_ylabel(Y_AXIS_LABEL, fontsize=12)
     ax.legend(fontsize=12)
-    
-    # You can set the y-axis to a logarithmic scale if the initial loss is very high
+
     # ax.set_yscale('log')
     
     # Set limits to zoom in on the interesting part of the graph if needed

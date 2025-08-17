@@ -162,10 +162,10 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    # Loss function (Mean Squared Error is ideal for comparing grids)
+    # Loss function
     criterion = nn.MSELoss()
     
-    # Optimizer (Adam is a great general-purpose choice)
+    # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     # --- Run the Training ---
