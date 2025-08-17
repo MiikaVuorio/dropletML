@@ -3,9 +3,11 @@ import torch.nn as nn
 from torchvision import models
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.tensorboard import SummaryWriter
 import os
 import numpy as np
 import argparse
+import time
 
 # --- Create a Custom Model Class ---
 class HeatmapResNet(nn.Module):
@@ -76,13 +78,12 @@ class WettingDataset(Dataset):
         return combined_input_tensor, label_tensor
 
 # --- The Main Training and Validation Functions ---
-def train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs):
+def train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, writer):
     print("\n--- Starting Training ---")
 
-    train_loss_history = []
-    val_loss_history = []
-
     for epoch in range(epochs):
+        epoch_start_time = time.time()
+        
         # --- Training Phase ---
         model.train() # Set model to training mode
         total_train_loss = 0.0
@@ -104,12 +105,17 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
             
             running_loss += loss.item()
             total_train_loss += loss.item()
-            if (i + 1) % 10 == 0: # Print progress every 10 batches
-                print(f"  Epoch [{epoch+1}/{epochs}], Batch [{i+1}/{len(train_loader)}], Loss: {running_loss / 10:.4f}")
+            if (i + 1) % 10 == 0: # Print and log progress every 10 batches
+                batch_loss = running_loss / 10
+                print(f"  Epoch [{epoch+1}/{epochs}], Batch [{i+1}/{len(train_loader)}], Loss: {batch_loss:.4f}")
+                
+                # Log batch loss to TensorBoard
+                global_step = epoch * len(train_loader) + i
+                writer.add_scalar('Loss/train_batch', batch_loss, global_step)
+                
                 running_loss = 0.0
 
         avg_train_loss = total_train_loss / len(train_loader)
-        train_loss_history.append(avg_train_loss)
 
         # --- Validation Phase ---
         model.eval() # Set model to evaluation mode
@@ -122,27 +128,39 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
                 val_loss += loss.item()
         
         avg_val_loss = val_loss / len(val_loader)
-        val_loss_history.append(avg_val_loss)
+        
+        epoch_end_time = time.time()
+        epoch_duration = epoch_end_time - epoch_start_time
+        
+        # --- Log to TensorBoard ---
+        writer.add_scalar('Loss/train_epoch', avg_train_loss, epoch + 1)
+        writer.add_scalar('Loss/validation_epoch', avg_val_loss, epoch + 1)
+        writer.add_scalar('Time/epoch_duration_seconds', epoch_duration, epoch + 1)
+        
+        # --- Print Epoch Summary ---
         print(f"\n--- Epoch {epoch+1} Summary ---")
         print(f"Training Loss: {avg_train_loss:.4f}")
         print(f"Validation Loss: {avg_val_loss:.4f}")
+        print(f"Epoch Duration: {epoch_duration:.2f} seconds")
         print("--------------------------\n")
 
     print("--- Training Finished ---")
-    return train_loss_history, val_loss_history
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train the HeatmapResNet model on .npz data.")
     
     parser.add_argument("--data_dir", type=str, required=True, help="Directory containing the .npz sample files.")
-    parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs.")
+    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs.")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size for training.")
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate for the Adam optimizer.")
     parser.add_argument("--val_split", type=float, default=0.2, help="Fraction of data to use for validation (e.g., 0.2 for 20%).")
     
     args = parser.parse_args()
 
+    # --- Initialize TensorBoard SummaryWriter ---
+    writer = SummaryWriter()
+    
     # --- Setup Device, Model, Data, Loss, and Optimizer ---
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
@@ -169,16 +187,14 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     # --- Run the Training ---
-    train_history, val_history = train_model(model, train_loader, val_loader, criterion, optimizer, device, args.epochs)
+    try:
+        train_model(model, train_loader, val_loader, criterion, optimizer, device, args.epochs, writer)
+    finally:
+        # --- Close the TensorBoard writer ---
+        writer.close()
 
     # --- Save the Trained Model ---
     model_save_path = "heatmap_resnet_final.pth"
     torch.save(model.state_dict(), model_save_path)
-    print(f"Model saved to {model_save_path}")
-
-    print("\n--- Final Loss History ---")
-    print("Training Loss per Epoch:")
-    print(train_history)
-    print("\nValidation Loss per Epoch:")
-    print(val_history)
-    print("--------------------------")
+    print(f"\nModel saved to {model_save_path}")
+    print("Run `tensorboard --logdir=runs` to view the training logs.")

@@ -9,7 +9,7 @@ channels:
 dependencies:
   - conda-forge::python=3.9
   - conda-forge::opencv
-  - conda-forge::numpy
+  - conda-forge::numpy<2.0
   - conda-forge::tqdm
   - conda-forge::tensorboard
   - conda-forge::pyyaml
