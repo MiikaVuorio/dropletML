@@ -6,10 +6,10 @@ Steps of running CAH heatmap generator
 
 1. Convert 4k video into frames using create_frames.py, e.g.
 
-python create_frames.py ^
-    --video_path "../data/raw/raw_real_video/RS13_C0174.mp4" ^
-    --output_dir "../data/raw/rs13_frames" ^
-    --prefix "rs13_frame_"
+python create_frames.py ^ 
+    --video_path "../data/raw/raw_real_video/RS11_C0176.mp4" ^
+    --output_dir "../data/raw/rs11_frames" ^
+    --prefix "rs11_frame_"
 
 
 2. Run yolo object detection model on the frames
