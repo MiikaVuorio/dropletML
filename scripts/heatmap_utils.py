@@ -19,27 +19,18 @@ def create_and_overlay_heatmap(grid_data, original_image, alpha=0.6, colormap=cv
     Returns:
         np.ndarray: The original image blended with the colored heatmap.
     """
-    # --- Step 1: Normalize the grid data to the 0-255 range ---
-    # This is crucial for applying a colormap.
     normalized_grid = cv2.normalize(grid_data, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
-    # --- Step 2: Resize the small grid to match the original image's dimensions ---
     target_height, target_width = original_image.shape[:2]
     heatmap = cv2.resize(normalized_grid, (target_width, target_height), interpolation=interpolation)
 
-    # --- Step 3: Apply the colormap to create a colored heatmap ---
-    # The result is a 3-channel (BGR) image.
     colored_heatmap = cv2.applyColorMap(heatmap, colormap)
 
-    # --- Step 4: Prepare the original image for blending ---
-    # If the original image is grayscale, convert it to BGR to match the heatmap.
     if len(original_image.shape) == 2:
         overlay_image = cv2.cvtColor(original_image, cv2.COLOR_GRAY2BGR)
     else:
         overlay_image = original_image.copy()
 
-    # --- Step 5: Blend the heatmap and the original image ---
-    # The formula is: blended_img = heatmap * alpha + original_img * (1-alpha)
     beta = 1.0 - alpha
     blended_image = cv2.addWeighted(colored_heatmap, alpha, overlay_image, 1, 0)
 
