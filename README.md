@@ -63,6 +63,9 @@ step 2
 step 3
 rs12 elapsed 00:22:48
 rs11 elapsed 00:17:22
+step 4
+100 epochs, 297 samples
+elapsed 00:30:38
 
 
 
