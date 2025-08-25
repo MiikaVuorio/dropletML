@@ -87,7 +87,7 @@ def preprocess_sample(npz_path):
     
     return input_tensor
 
-def run_inference(model_path, npz_path, in_channels, grid_size):
+def run_inference(model_path, npz_path, in_channels, grid_size, output_name):
     """
     Main function to run inference on a single sample.
     
@@ -96,6 +96,7 @@ def run_inference(model_path, npz_path, in_channels, grid_size):
         npz_path (str): Pathmode.l() to the input .npz sample file.
         in_channels (int): Number of input channels the model was trained with.
         grid_size (int): The dimension of the output grid (e.g., 16 for a 16x16 grid).
+        output_name (str): Path to the png and npy outputs.
     """
     # --- Setup Device and Model ---
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -164,8 +165,8 @@ def run_inference(model_path, npz_path, in_channels, grid_size):
     heatmap_np = predicted_heatmap.squeeze(0).cpu().numpy()
 
     # Save the raw numerical output
-    np.save("predicted_heatmap.npy", heatmap_np)
-    print("Predicted heatmap saved to 'predicted_heatmap.npy'")
+    np.save(f"{output_name}.npy", heatmap_np)
+    print(f"Predicted heatmap saved to '{output_name}.npy'")
 
     # --- Visualize and Save the Output ---
     plt.figure(figsize=(8, 6))
@@ -176,8 +177,8 @@ def run_inference(model_path, npz_path, in_channels, grid_size):
     plt.ylabel('Grid Y')
     
     # Save the visualization as a PNG file
-    plt.savefig("predicted_heatmap.png")
-    print("Visualized heatmap saved to 'predicted_heatmap.png'")
+    plt.savefig(f"{output_name}.png")
+    print(f"Visualized heatmap saved to '{output_name}.png'")
     # plt.show() # Uncomment this line if you want to display the plot directly
 
 if __name__ == "__main__":
@@ -187,7 +188,8 @@ if __name__ == "__main__":
     parser.add_argument("--npz_path", type=str, required=True, help="Path to the .npz sample file to run inference on.")
     parser.add_argument("--in_channels", type=int, default=50, help="Number of input channels the model expects (must match training).")
     parser.add_argument("--grid_size", type=int, default=16, help="The output grid size of the model (must match training).")
+    parser.add_argument("--output_name", type=str, default="predicted_heatmap", help="Path to the png and npy outputs.")
     
     args = parser.parse_args()
 
-    run_inference(args.model_path, args.npz_path, args.in_channels, args.grid_size)
+    run_inference(args.model_path, args.npz_path, args.in_channels, args.grid_size, args.output_name)

@@ -59,8 +59,8 @@ def main():
     Main function to parse command-line arguments and process images.
     """
     parser = argparse.ArgumentParser(description="Prepare images for ML model by cropping and converting to monochrome.")
-    parser.add_argument("input_path", type=str, help="Path to the input image file or directory.")
-    parser.add_argument("output_dir", type=str, help="Path to the directory where processed images will be saved.")
+    parser.add_argument("--input_path", type=str, help="Path to the input image file or directory.")
+    parser.add_argument("--output_dir", type=str, help="Path to the directory where processed images will be saved.")
     args = parser.parse_args()
 
     input_path = args.input_path

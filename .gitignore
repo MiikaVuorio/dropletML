@@ -5,6 +5,9 @@ data/raw/raw_real_video
 data/raw/rs11_frames
 data/raw/rs12_frames
 data/raw/rs13_frames
+data/raw/rs11_test_frames
+data/raw/rs12_test_frames
+data/raw/rs13_test_frames
 runs/yolov5_runs/detect/rs11_labels_conf_04
 runs/yolov5_runs/detect/rs11_labels_conf_06
 runs/yolov5_runs/detect/rs13_labels_conf_05
