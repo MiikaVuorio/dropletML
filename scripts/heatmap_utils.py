@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
         ax.imshow(cv2.cvtColor(blended_image, cv2.COLOR_BGR2RGB))
         if (i == 0):
-            ax.set_title(f"ABS sample\nAverage Value: {average_value:.4f} rad")
+            ax.set_title(f"ABS sample, CAH: \nAverage Inference Value: {average_value:.4f} rad")
         elif (i == 1):
             ax.set_title(f"PET sample\nAverage Value: {average_value:.4f} rad")
         elif (i == 2):
