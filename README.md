@@ -1,4 +1,4 @@
-# dropletML
+# dropletML—Machine Learning Methods For Droplet Analysis
 ML networks for macroscopic water droplet analysis
 
 
